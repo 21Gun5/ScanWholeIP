@@ -39,7 +39,7 @@ class Server(threading.Thread):
     def run(self):
         for ip in ip_list:
             time.sleep(0.1) # 控制生产者速度
-            item = "IP %-30s" % str(ip)
+            item = "%-10s产生IP  %s" % (self.getName(),str(ip))
             self.queue.put(item)
             print(item)
             # print(self.queue.qsize())
@@ -53,29 +53,28 @@ class Client(threading.Thread):
             if self.queue.empty():
                 break
             item = self.queue.get()
-            print("%-9s 处理%s 还有%d个\n"%(self.getName(),item,self.queue.qsize()))
-            ip = item.split(" ")[1]
-            # print(ip)
-            scanNetgear.main(ip)
+            ip = item.split()[2]
+            print("%-10s处理IP  %-24s 还有%d个\n"%(self.getName(),ip,self.queue.qsize()))
+            # scanNetgear.main(ip)
             self.queue.task_done()  # 此次任务结束，所有任务结束时触发join
         return
 
 if __name__ == '__main__':
     # 生成IP
-    # ip_list = generate_BClass_ip(1000)
+    ip_list = generate_BClass_ip(10)
     # ip_list = range(1,11)
 
-    fp = open("NetGear.txt", "r")
-    lines = fp.readlines()
-    fp.close()
-    ip_list = []
-    for line in lines:
-        (ip, port, isHttps) = line.split()
-        if isHttps == 'TRUE':
-            url = "https://%s:%s" % (ip, port)
-        else:
-            url = "http://%s:%s" % (ip, port)
-        ip_list.append(url)
+    # fp = open("NetGear.txt", "r")
+    # lines = fp.readlines()
+    # fp.close()
+    # ip_list = []
+    # for line in lines:
+    #     (ip, port, isHttps) = line.split()
+    #     if isHttps == 'TRUE':
+    #         url = "https://%s:%s" % (ip, port)
+    #     else:
+    #         url = "http://%s:%s" % (ip, port)
+    #     ip_list.append(url)
 
 
     queue = queue.Queue()
