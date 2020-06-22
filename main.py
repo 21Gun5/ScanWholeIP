@@ -97,38 +97,50 @@ class Client_P(multiprocessing.Process):
             self.queue.task_done()  # 此次任务结束，所有任务结束时触发join
         return
 
+
+
+CONSUMER_QUEUE_LIST = {}
+MAX_CONSUMER_NUM = 3
+# RESULT_QUEUE = Manager().Queue()
+
+
 def producer():
+    global ip_list
+    # 如[1,2,3,4,5,6]，3个消费者子进程分得[1,4][2,5][3,6]
     index = 0
     for data in ip_list:
-        sleep(0.0003)
-        print('生产: %s' % (data))
-        q = consumer_data[index % max_consumer_num]
+        sleep(0.1)
+        print('生产: %s\n' % (data))
+        q = CONSUMER_QUEUE_LIST[index % MAX_CONSUMER_NUM]
         q.put(data)
         index += 1
-    for q in consumer_data.itervalues():
+    # 添加结束的标记
+    for q in CONSUMER_QUEUE_LIST.itervalues():
         q.put(None)
 
 def consumer(consumer_id):
+    global ip_list
     while True:
         sleep(0.3)
-        queue = consumer_data[consumer_id]
-        data = queue.get()
+        q = CONSUMER_QUEUE_LIST[consumer_id]
+        data = q.get()
         if data == None:
-            print('结束')
-            result_queue.put(data)
+            print('consumer_%s消费结束\n'%consumer_id)
+            # RESULT_QUEUE.put(data)
             break
-        print('consumer_%s 消费: %s' % (consumer_id, data))
-        result_queue.put(data)
+        print('consumer_%s 消费: %s\n' % (consumer_id, data))
+        scanNetgear.main(data)
+        # 将3个队列的汇总，好像没什么必要
+        # RESULT_QUEUE.put(data)
 
-ip_list = (i for i in range(0,10))
-consumer_data = {}
-max_consumer_num = 3
-result_queue = Manager().Queue()
+
+
 
 if __name__ == '__main__':
     # 生成IP
     # ip_list = generate_BClass_ip(10)
     # ip_list = range(1,11)
+
     fp = open("NetGear.txt", "r")
     lines = fp.readlines()
     fp.close()
@@ -166,18 +178,21 @@ if __name__ == '__main__':
 
     # 进程池的方式
     start_time = time()
-    for i in range(0, 3):
-        consumer_data[i] = Manager().Queue()
-
-    pool = Pool(3 + 1)
-    pool.apply_async(producer)
-    for i in range(0, 3):
-        pool.apply_async(consumer, args=(i,))
-    # pool.apply_async(handler_result)
-
-    pool.close()
-    pool.join()
-
-    print('Done:%ss' % (time() - start_time))
-
+    # 产生IP
+    # ip_list = range(0, 10)
+    # 每一个consumer对应一个queue
+    for i in range(0, MAX_CONSUMER_NUM):
+        # key = "consumer" + str(i+1)
+        # CONSUMER_QUEUE_LIST[key] = Manager().Queue()
+        CONSUMER_QUEUE_LIST[i] = Manager().Queue()
+    # 创建进程池并添加target
+    po = Pool(MAX_CONSUMER_NUM + 2)
+    po.apply_async(producer)
+    for i in range(0, MAX_CONSUMER_NUM):
+        po.apply_async(consumer, args=(i,))
+    # po.apply_async(handle_result)
+    # 关闭进程池、等待所有子进程结束
+    po.close()
+    po.join()
+    print('Total time: %ss' % (time() - start_time))
 
