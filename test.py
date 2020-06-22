@@ -1,3 +1,4 @@
+#encoding=utf-8
 # 1
 # from queue import Queue
 # import threading
@@ -160,57 +161,195 @@
 
 
 
-# 4
-import threading
-import queue
-import time
+# # 4
+# import threading
+# import queue
+# import time
+#
+# class server(threading.Thread):
+#     def __init__(self,que):
+#         threading.Thread.__init__(self)
+#         self.queue = que
+#     def run(self):
+#         global ip_list
+#         count = 0
+#         for i in ip_list:
+#             # if queue.qsize
+#             item = "产品%s\n"%str(i)
+#
+#             self.queue.put(item)
+#             print(item)
+#             time.sleep(0.1)
+#
+# class Consumer(threading.Thread):
+#     def __init__(self,que):
+#         threading.Thread.__init__(self)
+#         self.queue = que
+#     def run(self):
+#         while True:
+#             time.sleep(0.5)
+#             if self.queue.empty():
+#                 break
+#             item = self.queue.get()
+#             print("%s 消耗 %s\n"%(self.getName(),item))
+#             self.queue.task_done()
+#         return
+#
+# if __name__ == '__main__':
+#     queue = queue.Queue()
+#
+#     task_list = []
+#     for i in range(2):
+#         task = Consumer(queue)
+#         task_list.append(task)
+#
+#     ip_list = range(10)
+#
+#     p = server(queue)
+#     p.start()
+#
+#     for i in task_list:
+#         con = Consumer(queue)
+#         con.start()
+#
+#     queue.join()
+#
+#     print('Done')
 
-class server(threading.Thread):
-    def __init__(self,que):
-        threading.Thread.__init__(self)
-        self.queue = que
-    def run(self):
-        global ip_list
-        count = 0
-        for i in ip_list:
-            # if queue.qsize
-            item = "产品%s\n"%str(i)
+# # 5
+# from multiprocessing import Pool, Manager
+# from time import sleep, time
+# import csv
+#
+# # def init_consumer_data():
+# #     for i in range(0, max_consumer_num):
+# #         consumer_data[i] = Manager().Queue()
+#
+# def producer():
+#     index = 0
+#     for data in ip_list:
+#         sleep(0.0003)
+#         print('生产: %s' % (data))
+#         q = consumer_data[index % max_consumer_num]
+#         q.put(data)
+#         index += 1
+#     for q in consumer_data.itervalues():
+#         q.put(None)
+#
+# def consumer(consumer_id):
+#     while True:
+#         sleep(0.3)
+#         queue = consumer_data[consumer_id]
+#         data = queue.get()
+#         if data == None:
+#             print('结束')
+#             result_queue.put(data)
+#             break
+#         print('consumer_%s 消费: %s' % (consumer_id, data))
+#         result_queue.put(data)
+#
+# # def handler_result():
+# #     f = open('test.csv', 'w')
+# #     writer = csv.writer(f)
+# #     writer.writerow('data')
+# #     while True:
+# #         data = result_queue.get()
+# #         if data == None:
+# #             print('结束')
+# #             f.close()
+# #             break
+# #         writer.writerow([data])
+# #         print('处理结果:%s' % (data,))
+#
+#
+# ip_list = (i for i in range(0,10))
+# consumer_data = {}
+# max_consumer_num = 3
+# result_queue = Manager().Queue()
+#
+# if __name__ == '__main__':
+#     start_time = time()
+#
+#     for i in range(0, 3):
+#         consumer_data[i] = Manager().Queue()
+#
+#     pool = Pool(3 + 1)
+#     pool.apply_async(producer)
+#     for i in range(0, 3):
+#         pool.apply_async(consumer, args=(i,))
+#     # pool.apply_async(handler_result)
+#
+#     pool.close()
+#     pool.join()
+#
+#     print('Done:%ss' % (time() - start_time))
+#
 
-            self.queue.put(item)
-            print(item)
-            time.sleep(0.1)
 
-class Consumer(threading.Thread):
-    def __init__(self,que):
-        threading.Thread.__init__(self)
-        self.queue = que
-    def run(self):
-        while True:
-            time.sleep(0.5)
-            if self.queue.empty():
-                break
-            item = self.queue.get()
-            print("%s 消耗 %s\n"%(self.getName(),item))
-            self.queue.task_done()
-        return
+# 6
+# encoding=utf-8
+from multiprocessing import Pool, Manager
+from time import sleep, time
+import csv
+
+EMAIL_SOURCE = (i for i in range(0,10))
+
+EMAIL_WORKER_DATA = {}
+MAX_WORKER_NUM = 3
+RESULT_DATA = Manager().Queue()
+
+
+
+def _init_worker_data():
+    for i in range(0, MAX_WORKER_NUM):
+        EMAIL_WORKER_DATA[i] = Manager().Queue()
+
+def _read_email_data():
+    index = 0
+    for data in EMAIL_SOURCE:
+        sleep(0.0003)
+        print('load data: %s' % (data))
+        q = EMAIL_WORKER_DATA[index % MAX_WORKER_NUM]
+        q.put(data)
+        index += 1
+    for q in EMAIL_WORKER_DATA.itervalues():
+        q.put(None)
+
+def _read_worker_data(worker_id):
+    while True:
+        sleep(0.003)
+        q = EMAIL_WORKER_DATA[worker_id]
+        data = q.get()
+        if data == None:
+            print('finished')
+            RESULT_DATA.put(data)
+            break
+        print('%s gets data: %s' % (worker_id, data))
+        RESULT_DATA.put(data)
+
+def _read_result_data():
+    file_name = 'test.csv'
+    f = open(file_name, 'w')
+    writer = csv.writer(f)
+    writer.writerow('data')
+    while True:
+        data = RESULT_DATA.get()
+        if data == None:
+            print('finished')
+            f.close()
+            break
+        writer.writerow([data])
+        print('handled result data:%s' % (data,))
 
 if __name__ == '__main__':
-    queue = queue.Queue()
-
-    task_list = []
-    for i in range(2):
-        task = Consumer(queue)
-        task_list.append(task)
-
-    ip_list = range(10)
-
-    p = server(queue)
-    p.start()
-
-    for i in task_list:
-        con = Consumer(queue)
-        con.start()
-
-    queue.join()
-
-    print('Done')
+    start_time = time()
+    _init_worker_data()
+    p = Pool(MAX_WORKER_NUM + 2)
+    p.apply_async(_read_email_data)
+    for i in range(0, MAX_WORKER_NUM):
+        p.apply_async(_read_worker_data, args=(i,))
+    p.apply_async(_read_result_data)
+    p.close()
+    p.join()
+    end_time = time()
+    print('handle time:%ss' % (end_time - start_time))
