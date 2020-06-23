@@ -18,27 +18,26 @@ mutex = threading.Lock()
 thread_number = 300  # 控制线程数
 total_item = 0
 success_item = 0
-empty_item = 0
 # 不显示因verigy=false的产生的警告
 warnings.filterwarnings('ignore')
 
 def send_request(url, index,timeout):
-    global empty_item
     try:
         if url.find("https") != -1:
             response = requests.get(url + '/currentsetting.htm', timeout=timeout, verify=False)
         else:
             response = requests.get(url + '/currentsetting.htm', timeout=timeout)
     except Exception as e:
+        # print("%d %s\n"%(index,e))
         return save_failure_reason(url, str(e), index)
     else:
+        # print(response)
         try:
             Firmware = re.search(r'(?<=Firmware=)[._0-9a-zA-Z]*', str(response.content)).group()
             RegionTag = re.search(r'(?<=RegionTag=)[._0-9a-zA-Z]*', str(response.content)).group()
         except Exception as e:
             Firmware = None
             RegionTag = None
-            empty_item += 1
         return save_success_info(index,url,Firmware,RegionTag)
 def save_success_info(index,url, Firmware,RegionTag):
     mutex.acquire()
@@ -57,4 +56,11 @@ def main(url_list):
     for url in url_list:
         executor = ThreadPoolExecutor(max_workers=thread_number)
         executor.submit(send_request, url, 0, 3)
+        # TODO: 控制超时时间，太大无记录，太小超时错误
+
+if __name__ == '__main__':
+    url_list =['http://128.1.0.1:80', 'http://128.1.0.2:80', 'http://128.1.0.3:80', 'http://128.1.0.4:80', 'http://128.1.0.5:80', 'http://128.1.0.6:80', 'http://128.1.0.7:80', 'http://128.1.0.8:80', 'http://128.1.0.9:80', 'http://128.1.0.10:80']
+    for url in url_list:
+        executor = ThreadPoolExecutor(max_workers=thread_number)
+        executor.submit(send_request, url, url_list.index(url), 3)
         # TODO: 控制超时时间，太大无记录，太小超时错误

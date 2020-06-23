@@ -69,7 +69,7 @@ class Client(threading.Thread):
         return
 
 CONSUMER_QUEUE_LIST = {}    # 每个消费者子进程对应一个queue
-MAX_CONSUMER_NUM = 5    # 消费者子进程个数
+MAX_CONSUMER_NUM = 4    # 消费者子进程个数
 BATCH_NUM = 10 # 一批共有多少个
 
 
@@ -104,21 +104,22 @@ def consumer(consumer_id):
 if __name__ == '__main__':
     # 生成IP
     # ip_list = range(40)
-    ip_list = generate_BClass_ip(1000)
+    # ip_list = generate_BClass_ip(1000)
+    # ip_list = range(1000)
 
-    # ip_list = []
-    # fp = open("NetGear.txt", "r")
-    # lines = fp.readlines()
-    # fp.close()
-    # for line in lines:
-    #     (ip, port, isHttps) = line.split()
-    #     if isHttps == 'TRUE':
-    #         url = "https://%s:%s" % (ip, port)
-    #     else:
-    #         url = "http://%s:%s" % (ip, port)
-    #     # ip_list.append(url)
-    #     if len(ip_list) < 1000:
-    #         ip_list.append(url)
+    ip_list = []
+    fp = open("NetGear.txt", "r")
+    lines = fp.readlines()
+    fp.close()
+    for line in lines:
+        (ip, port, isHttps) = line.split()
+        if isHttps == 'TRUE':
+            url = "https://%s:%s" % (ip, port)
+        else:
+            url = "http://%s:%s" % (ip, port)
+        # ip_list.append(url)
+        if len(ip_list) < 1000:
+            ip_list.append(url)
 
     # 进程池的方式
     start_time = time()
@@ -128,8 +129,10 @@ if __name__ == '__main__':
     # 创建进程池并添加target
     po = Pool(MAX_CONSUMER_NUM + 2)
     po.apply_async(producer)
+    # po.apply(producer)
     for i in range(0, MAX_CONSUMER_NUM):
         po.apply_async(consumer, args=(i,))
+        # po.apply(consumer, args=(i,))
     # 关闭进程池、等待所有子进程结束
     po.close()
     po.join()

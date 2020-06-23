@@ -429,11 +429,11 @@
 # print(response)
 
 # 列表分组
-a=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-b =[]
-for i in range(0, len(a), 3):
-    b.append(a[i:i+3])
-print b
+# a=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+# b =[]
+# for i in range(0, len(a), 3):
+#     b.append(a[i:i+3])
+# print b
 
 
 # # 探测端口是否开启
