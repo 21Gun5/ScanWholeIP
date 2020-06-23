@@ -53,10 +53,12 @@ def save_failure_reason(url, errorInfo,index):
     mutex.release()
 
 def main(url_list):
-    for url in url_list:
-        executor = ThreadPoolExecutor(max_workers=thread_number)
-        executor.submit(send_request, url, 0, 3)
-        # TODO: 控制超时时间，太大无记录，太小超时错误
+    executor = ThreadPoolExecutor(max_workers=thread_number)
+    task_list = []
+    for i in url_list:
+        task = executor.submit(send_request, i, str(url_list.index(i)+1),3)
+        task_list.append(task)
+    wait(task_list, return_when=ALL_COMPLETED)
 
 if __name__ == '__main__':
     url_list =['http://128.1.0.1:80', 'http://128.1.0.2:80', 'http://128.1.0.3:80', 'http://128.1.0.4:80', 'http://128.1.0.5:80', 'http://128.1.0.6:80', 'http://128.1.0.7:80', 'http://128.1.0.8:80', 'http://128.1.0.9:80', 'http://128.1.0.10:80']

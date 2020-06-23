@@ -4,6 +4,7 @@ import threading
 import Queue
 import time
 import scanNetgear
+import scanNetgear2
 import multiprocessing
 import os
 import random
@@ -40,33 +41,33 @@ def generate_BClass_ip(max_num=10):
                 if len(B_host_list) == max_num:
                     return B_host_list
 
-class Server(threading.Thread):
-    global ip_list
-    def __init__(self,que):
-        threading.Thread.__init__(self)
-        self.queue = que
-    def run(self):
-        for ip in ip_list:
-            sleep(0.1) # 控制生产者速度
-            item = "%-10s产生IP  %s" % (self.getName(),str(ip))
-            self.queue.put(item)
-            print(item)
-            # print(self.queue.qsize())
-class Client(threading.Thread):
-    def __init__(self,que):
-        threading.Thread.__init__(self)
-        self.queue = que
-    def run(self):
-        while True:
-            sleep(0.5)
-            if self.queue.empty():
-                break
-            item = self.queue.get()
-            ip = item.split()[2]
-            print("%-10s处理IP  %-30s 还有%d个\n"%(self.getName(),ip,self.queue.qsize()))
-            scanNetgear.main(ip)
-            self.queue.task_done()  # 此次任务结束，所有任务结束时触发join
-        return
+# class Server(threading.Thread):
+#     global ip_list
+#     def __init__(self,que):
+#         threading.Thread.__init__(self)
+#         self.queue = que
+#     def run(self):
+#         for ip in ip_list:
+#             sleep(0.1) # 控制生产者速度
+#             item = "%-10s产生IP  %s" % (self.getName(),str(ip))
+#             self.queue.put(item)
+#             print(item)
+#             # print(self.queue.qsize())
+# class Client(threading.Thread):
+#     def __init__(self,que):
+#         threading.Thread.__init__(self)
+#         self.queue = que
+#     def run(self):
+#         while True:
+#             sleep(0.5)
+#             if self.queue.empty():
+#                 break
+#             item = self.queue.get()
+#             ip = item.split()[2]
+#             print("%-10s处理IP  %-30s 还有%d个\n"%(self.getName(),ip,self.queue.qsize()))
+#             scanNetgear.main(ip)
+#             self.queue.task_done()  # 此次任务结束，所有任务结束时触发join
+#         return
 
 CONSUMER_QUEUE_LIST = {}    # 每个消费者子进程对应一个queue
 MAX_CONSUMER_NUM = 4    # 消费者子进程个数
@@ -100,26 +101,27 @@ def consumer(consumer_id):
             break
         print('consumer_%s 消费: %s\n' % (consumer_id, data_list))
         scanNetgear.main(data_list)
+        # scanNetgear2.main(data_list)
 
 if __name__ == '__main__':
     # 生成IP
-    # ip_list = range(40)
-    # ip_list = generate_BClass_ip(1000)
+    # ip_list = range(100)
+    ip_list = generate_BClass_ip(1000)
     # ip_list = range(1000)
 
-    ip_list = []
-    fp = open("NetGear.txt", "r")
-    lines = fp.readlines()
-    fp.close()
-    for line in lines:
-        (ip, port, isHttps) = line.split()
-        if isHttps == 'TRUE':
-            url = "https://%s:%s" % (ip, port)
-        else:
-            url = "http://%s:%s" % (ip, port)
-        # ip_list.append(url)
-        if len(ip_list) < 1000:
-            ip_list.append(url)
+    # ip_list = []
+    # fp = open("NetGear.txt", "r")
+    # lines = fp.readlines()
+    # fp.close()
+    # for line in lines:
+    #     (ip, port, isHttps) = line.split()
+    #     if isHttps == 'TRUE':
+    #         url = "https://%s:%s" % (ip, port)
+    #     else:
+    #         url = "http://%s:%s" % (ip, port)
+    #     # ip_list.append(url)
+    #     if len(ip_list) < 1000:
+    #         ip_list.append(url)
 
     # 进程池的方式
     start_time = time()
@@ -136,6 +138,7 @@ if __name__ == '__main__':
     # 关闭进程池、等待所有子进程结束
     po.close()
     po.join()
+    sleep(10)
     print('Total time: %ss' % (time() - start_time))
 
     # # 多线程的方式
