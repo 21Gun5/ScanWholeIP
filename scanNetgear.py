@@ -53,7 +53,8 @@ def save_failure_reason(url, errorInfo,index):
         f.close()
     mutex.release()
 
-def main(ip):
-    executor = ThreadPoolExecutor(max_workers=thread_number)
-    executor.submit(send_request, ip, 0, 3)
-    # TODO: 控制超时时间，太大无记录，太小超时错误
+def main(url_list):
+    for url in url_list:
+        executor = ThreadPoolExecutor(max_workers=thread_number)
+        executor.submit(send_request, url, 0, 3)
+        # TODO: 控制超时时间，太大无记录，太小超时错误

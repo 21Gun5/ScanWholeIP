@@ -428,5 +428,27 @@
 # response = requests.get(url + '/currentsetting.htm', timeout=0)
 # print(response)
 
+# 列表分组
+a=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+b =[]
+for i in range(0, len(a), 3):
+    b.append(a[i:i+3])
+print b
 
-# 探测端口是否开启
+
+# # 探测端口是否开启
+# import socket
+# import time
+# #
+# n = 0
+# while n < 10:
+#     sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     sk.settimeout(3)
+#     try:
+#         sk.connect(('www.baidu.com', 800))
+#         print("Server port is ok")
+#     except Exception:
+#         print("\033[1;31;mServer port 18000 is close\033[0m")
+#     sk.close()
+#     print(n)
+#     n += 1
