@@ -30,7 +30,6 @@ def send_request(url, index,timeout):
         else:
             response = requests.get(url + '/currentsetting.htm', timeout=timeout)
     except Exception as e:
-        # return
         return save_failure_reason(url, str(e), index)
     else:
         try:
@@ -39,40 +38,22 @@ def send_request(url, index,timeout):
         except Exception as e:
             Firmware = None
             RegionTag = None
-            empty_item +=1
+            empty_item += 1
         return save_success_info(index,url,Firmware,RegionTag)
 def save_success_info(index,url, Firmware,RegionTag):
-    global success_item
-    success_item += 1
-
-
-
     mutex.acquire()
-    with open('success_output.txt', 'a+') as f:
-        # fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+    with open('output.txt', 'a+') as f:
         f.write("%-5s %-30s %-20s %s\n" % (index,url, Firmware,RegionTag))
-        # print("%-5s %-30s %-20s %s\n" % (index,url, Firmware,RegionTag))
         f.close()
-        # fcntl.flock(f.fileno(), fcntl.LOCK_UN)
     mutex.release()
 def save_failure_reason(url, errorInfo,index):
     mutex.acquire()
-    with open('success_output.txt', 'a+') as f:
+    with open('output.txt', 'a+') as f:
         f.write("%-5s %-30s ---- %s \n" % (index, url, errorInfo))
         f.close()
     mutex.release()
 
-    # global failure_item
-    # failure_item += 1
-
-    # errorFile = what_error(errorInfo)
-    # # mutex.acquire()
-    # f2 = open(errorFile, 'a+')
-    # f2.write("%-5s %-30s ---- %s \n" % (index, url, errorInfo))
-    # # print("%-5s %-30s ---- %s \n" % (index, url, errorInfo))
-    # f2.close()
-    # # mutex.release()
-
 def main(ip):
     executor = ThreadPoolExecutor(max_workers=thread_number)
     executor.submit(send_request, ip, 0, 3)
+    # TODO: 控制超时时间，太大无记录，太小超时错误

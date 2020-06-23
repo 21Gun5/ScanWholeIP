@@ -286,70 +286,147 @@
 #
 
 
-# 6
-# encoding=utf-8
-from multiprocessing import Pool, Manager
-from time import sleep, time
-import csv
+# # 6
+# # encoding=utf-8
+# from multiprocessing import Pool, Manager
+# from time import sleep, time
+# import csv
+#
+# EMAIL_SOURCE = (i for i in range(0,10))
+#
+# EMAIL_WORKER_DATA = {}
+# MAX_WORKER_NUM = 3
+# RESULT_DATA = Manager().Queue()
+#
+#
+#
+# def _init_worker_data():
+#     for i in range(0, MAX_WORKER_NUM):
+#         EMAIL_WORKER_DATA[i] = Manager().Queue()
+#
+# def _read_email_data():
+#     index = 0
+#     for data in EMAIL_SOURCE:
+#         sleep(0.0003)
+#         print('load data: %s' % (data))
+#         q = EMAIL_WORKER_DATA[index % MAX_WORKER_NUM]
+#         q.put(data)
+#         index += 1
+#     for q in EMAIL_WORKER_DATA.itervalues():
+#         q.put(None)
+#
+# def _read_worker_data(worker_id):
+#     while True:
+#         sleep(0.003)
+#         q = EMAIL_WORKER_DATA[worker_id]
+#         data = q.get()
+#         if data == None:
+#             print('finished')
+#             RESULT_DATA.put(data)
+#             break
+#         print('%s gets data: %s' % (worker_id, data))
+#         RESULT_DATA.put(data)
+#
+# def _read_result_data():
+#     file_name = 'test.csv'
+#     f = open(file_name, 'w')
+#     writer = csv.writer(f)
+#     writer.writerow('data')
+#     while True:
+#         data = RESULT_DATA.get()
+#         if data == None:
+#             print('finished')
+#             f.close()
+#             break
+#         writer.writerow([data])
+#         print('handled result data:%s' % (data,))
+#
+# if __name__ == '__main__':
+#     start_time = time()
+#     _init_worker_data()
+#     p = Pool(MAX_WORKER_NUM + 2)
+#     p.apply_async(_read_email_data)
+#     for i in range(0, MAX_WORKER_NUM):
+#         p.apply_async(_read_worker_data, args=(i,))
+#     p.apply_async(_read_result_data)
+#     p.close()
+#     p.join()
+#     end_time = time()
+#     print('handle time:%ss' % (end_time - start_time))
 
-EMAIL_SOURCE = (i for i in range(0,10))
+# # 7
+# # encoding=utf-8
+# from multiprocessing import Pool, Manager
+# from time import sleep, time
+# import csv
+#
+#
+# CONSUMER_QUEUE_LIST = {}
+# MAX_CONSUMER_NUM = 3
+# # RESULT_QUEUE = Manager().Queue()
+#
+#
+# def producer():
+#     global ip_list
+#     # 如[1,2,3,4,5,6]，3个消费者子进程分得[1,4][2,5][3,6]
+#     index = 0
+#     for data in ip_list:
+#         sleep(0.01)
+#         print('生产: %s\n' % (data))
+#         q = CONSUMER_QUEUE_LIST[index % MAX_CONSUMER_NUM]
+#         q.put(data)
+#         index += 1
+#     # 添加结束的标记
+#     for q in CONSUMER_QUEUE_LIST.itervalues():
+#         q.put(None)
+#
+# def consumer(consumer_id):
+#     global ip_list
+#     while True:
+#         sleep(0.03)
+#         q = CONSUMER_QUEUE_LIST[consumer_id]
+#         data = q.get()
+#         if data == None:
+#             print('consumer_%s消费结束\n'%consumer_id)
+#             # RESULT_QUEUE.put(data)
+#             break
+#         print('consumer_%s 消费: %s\n' % (consumer_id, data))
+#         # 将3个队列的汇总，好像没什么必要
+#         # RESULT_QUEUE.put(data)
+#
+# # def handle_result():
+# #     while True:
+# #         data = RESULT_QUEUE.get()
+# #         if data == None:
+# #             print('处理结束')
+# #             break
+# #         print('处理结果:%s' % (data,))
+#
+# if __name__ == '__main__':
+#     start_time = time()
+#     # 产生IP
+#     ip_list = range(0, 10)
+#     # 每一个consumer对应一个queue
+#     for i in range(0, MAX_CONSUMER_NUM):
+#         # key = "consumer" + str(i+1)
+#         # CONSUMER_QUEUE_LIST[key] = Manager().Queue()
+#         CONSUMER_QUEUE_LIST[i] = Manager().Queue()
+#     # 创建进程池并添加target
+#     po = Pool(MAX_CONSUMER_NUM + 2)
+#     po.apply_async(producer)
+#     for i in range(0, MAX_CONSUMER_NUM):
+#         po.apply_async(consumer, args=(i,))
+#     # po.apply_async(handle_result)
+#     # 关闭进程池、等待所有子进程结束
+#     po.close()
+#     po.join()
+#     print('Total time: %ss' % (time() - start_time))
 
-EMAIL_WORKER_DATA = {}
-MAX_WORKER_NUM = 3
-RESULT_DATA = Manager().Queue()
+# # 其他测试
+# import requests
+# url = "http://128.1.0.10"
+# response = requests.get(url + '/currentsetting.htm', timeout=0)
+# print(response)
 
 
-
-def _init_worker_data():
-    for i in range(0, MAX_WORKER_NUM):
-        EMAIL_WORKER_DATA[i] = Manager().Queue()
-
-def _read_email_data():
-    index = 0
-    for data in EMAIL_SOURCE:
-        sleep(0.0003)
-        print('load data: %s' % (data))
-        q = EMAIL_WORKER_DATA[index % MAX_WORKER_NUM]
-        q.put(data)
-        index += 1
-    for q in EMAIL_WORKER_DATA.itervalues():
-        q.put(None)
-
-def _read_worker_data(worker_id):
-    while True:
-        sleep(0.003)
-        q = EMAIL_WORKER_DATA[worker_id]
-        data = q.get()
-        if data == None:
-            print('finished')
-            RESULT_DATA.put(data)
-            break
-        print('%s gets data: %s' % (worker_id, data))
-        RESULT_DATA.put(data)
-
-def _read_result_data():
-    file_name = 'test.csv'
-    f = open(file_name, 'w')
-    writer = csv.writer(f)
-    writer.writerow('data')
-    while True:
-        data = RESULT_DATA.get()
-        if data == None:
-            print('finished')
-            f.close()
-            break
-        writer.writerow([data])
-        print('handled result data:%s' % (data,))
-
-if __name__ == '__main__':
-    start_time = time()
-    _init_worker_data()
-    p = Pool(MAX_WORKER_NUM + 2)
-    p.apply_async(_read_email_data)
-    for i in range(0, MAX_WORKER_NUM):
-        p.apply_async(_read_worker_data, args=(i,))
-    p.apply_async(_read_result_data)
-    p.close()
-    p.join()
-    end_time = time()
-    print('handle time:%ss' % (end_time - start_time))
+# 探测端口是否开启
