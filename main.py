@@ -4,7 +4,6 @@ import threading
 import Queue
 import time
 import scanNetgear
-import scanNetgear2
 import multiprocessing
 import os
 import random
@@ -13,8 +12,17 @@ from multiprocessing import Manager,Pool
 from time import sleep, time
 
 # 产生B类IP
-def generate_BClass_ip(max_num=10):
+
+def generate_BClass_ip(a, b, max_num=10):
     # 网络: 2^14-1=16383, 128.1-191.255
+
+    # start = a<<24+b<<16
+    # print(start)
+    # ret = []
+    # for i in range(1, max_num+1):
+    #     ret.append(socket.inet_(start + i)
+    # return ret
+
     B_net_list = []
     for a in range(128,192):
         for b in range(0,256):
@@ -35,7 +43,6 @@ def generate_BClass_ip(max_num=10):
                     continue
                 ip = net + '.' + str(c) + '.' + str(d)
                 url = "http://" + ip + ":80"
-                # TODO: 如果url格式错误，立即返回错误，会被记录，否则去请求，但是因超时的原因，没被记录
                 B_host_list.append(url)
                 # 产生指定个数的IP
                 if len(B_host_list) == max_num:
@@ -105,23 +112,21 @@ def consumer(consumer_id):
 
 if __name__ == '__main__':
     # 生成IP
-    # ip_list = range(100)
-    ip_list = generate_BClass_ip(1000)
+    # ip_list = generate_BClass_ip(0,0,1000)
     # ip_list = range(1000)
-
-    # ip_list = []
-    # fp = open("NetGear.txt", "r")
-    # lines = fp.readlines()
-    # fp.close()
-    # for line in lines:
-    #     (ip, port, isHttps) = line.split()
-    #     if isHttps == 'TRUE':
-    #         url = "https://%s:%s" % (ip, port)
-    #     else:
-    #         url = "http://%s:%s" % (ip, port)
-    #     # ip_list.append(url)
-    #     if len(ip_list) < 1000:
-    #         ip_list.append(url)
+    ip_list = []
+    fp = open("NetGear.txt", "r")
+    lines = fp.readlines()
+    fp.close()
+    for line in lines:
+        (ip, port, isHttps) = line.split()
+        if isHttps == 'TRUE':
+            url = "https://%s:%s" % (ip, port)
+        else:
+            url = "http://%s:%s" % (ip, port)
+        # ip_list.append(url)
+        if len(ip_list) < 1000:
+            ip_list.append(url)
 
     # 进程池的方式
     start_time = time()
@@ -131,36 +136,10 @@ if __name__ == '__main__':
     # 创建进程池并添加target
     po = Pool(MAX_CONSUMER_NUM + 2)
     po.apply_async(producer)
-    # po.apply(producer)
     for i in range(0, MAX_CONSUMER_NUM):
         po.apply_async(consumer, args=(i,))
-        # po.apply(consumer, args=(i,))
     # 关闭进程池、等待所有子进程结束
     po.close()
     po.join()
-    sleep(10)
     print('Total time: %ss' % (time() - start_time))
-
-    # # 多线程的方式
-    # queue = Queue.Queue()
-    # # queue_P = multiprocessing.Queue()
-    #
-    # # 服务端，分配IP
-    # s = Server(queue)
-    # # s = Server_P(queue)
-    # s.start()
-    #
-    # # 多个客户端，处理IP
-    # client_list = []
-    # for i in range(10):
-    #     c = Client(queue)
-    #     # c = Client_P(queue)
-    #     client_list.append(c)
-    # for c in client_list:
-    #     c.start()
-    # # 等待s和queue自动结束，c通过break手动结束
-    # s.join()
-    # queue.join()
-    # # queue_P.join()
-    # print('Done')
 
