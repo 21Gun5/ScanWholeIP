@@ -1,26 +1,26 @@
 #coding=utf-8
+
 import threading
-# import queue
 import Queue
 import time
-
-# import multiprocessing
 import os
 import random
 import socket
 import struct
 
-
 from multiprocessing import Manager,Pool
+
 # 自定义模块
 import scanNetgear
 import scanDlink_dir
-import scanDlink_dir2
+import scan_dlink_dir2
 
-
+# 全局变量
 CONSUMER_QUEUE_LIST = {}    # 每个消费者子进程对应一个queue
 MAX_CONSUMER_NUM = 4    # 消费者子进程个数
 BATCH_NUM = 10 # 一批共有多少个
+URL_QUEUE = Manager().Queue()
+
 
 
 def generate_url(a, b, max_num=100):
@@ -64,9 +64,7 @@ def generate_url_2(begin_ip,end_ip):
     begin_num = socket.ntohl(struct.unpack("I", socket.inet_aton(begin_ip))[0])
     end_num = socket.ntohl(struct.unpack("I", socket.inet_aton(end_ip))[0])
     len = end_num-begin_num
-    # print(begin_num)
-    # ip = socket.inet_ntoa(struct.pack("I", socket.htonl(begin_num)))
-    # print(ip)
+
     url_list = []
     for i in range(len):
         ip = socket.inet_ntoa(struct.pack("I", socket.htonl(begin_num + i)))
@@ -75,6 +73,24 @@ def generate_url_2(begin_ip,end_ip):
         url_list.append(url_http)
         url_list.append(url_https)
     return url_list
+
+    # begin_num = socket.ntohl(struct.unpack("I", socket.inet_aton(begin_ip))[0])
+    # end_num = socket.ntohl(struct.unpack("I", socket.inet_aton(end_ip))[0])
+    # len = end_num-begin_num
+    #
+    # # url_list = []
+    # for i in range(20):
+    #     ip = socket.inet_ntoa(struct.pack("I", socket.htonl(begin_num + i)))
+    #     url_http = "http://" + ip
+    #     url_https = "https://" + ip
+    #     # 添加进url队列
+    #     URL_QUEUE.put(url_http)
+    #     URL_QUEUE.put(url_https)
+    # # 在最后添加作为结束的标记
+    # URL_QUEUE.put(None)
+    #     # url_list.append(url_http)
+    #     # url_list.append(url_https)
+    # # return url_list
 
 
 def producer(url_list):
@@ -103,22 +119,38 @@ def consumer(consumer_id):
             print('consumer_%s消费结束\n'%consumer_id)
             break
         print('consumer_%s 消费: %s\n' % (consumer_id, data_list))
-        scanDlink_dir2.main(data_list)
+        scan_dlink_dir2.main(data_list)
         # scanNetgear2.main(data_list)
 
 if __name__ == '__main__':
-    # 生成IP构造URL
+    # 生成IP,构造URL
     # url_list = generate_url(66,183,100000)
     url_list = generate_url_2("1.36.0.0","1.36.255.255")
-    # print(url_list)
-
+    # url_list = ["http://101.109.177.29",
+    #             "http://125.24.158.203:8080",
+    #             "https://110.159.12.105",
+    #             "http://125.25.148.77:1234",
+    #             "http://125.27.72.2:8080",
+    #             "http://179.9.148.48",
+    #             "https://118.100.64.169:8081",
+    #             "http://110.141.156.240:8080",
+    #             "https://13.236.229.187",
+    #             "http://115.188.28.153:8080",
+    #             "https://36.225.84.249:8081",
+    #             "http://183.88.139.157",
+    #             "http://91.140.139.84:8080",
+    #             "http://88.132.77.122",
+    #             "http://182.52.200.144:1234",
+    #             "http://111.240.68.170:8080",
+    #             "http://91.74.179.230:8080"
+    #             ]
     # 进程池的方式
     start_time = time.time()
     # 每一个consumer对应一个queue
     for i in range(0, MAX_CONSUMER_NUM):
         CONSUMER_QUEUE_LIST[i] = Manager().Queue()
     # 创建进程池并添加target
-    po = Pool(MAX_CONSUMER_NUM + 2)
+    po = Pool(MAX_CONSUMER_NUM + 1)
     po.apply_async(producer,args=(url_list,))
     for i in range(0, MAX_CONSUMER_NUM):
         po.apply_async(consumer, args=(i,))
@@ -142,4 +174,3 @@ if __name__ == '__main__':
     #     # url_list.append(url)
     #     if len(ip_list) < 1000:
     #         url_list.append(url)
-
