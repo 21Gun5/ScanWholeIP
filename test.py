@@ -453,4 +453,32 @@
 #     print(n)
 #     n += 1
 
+# # 生成IP
+#
+# import socket
+# import struct
+#
+# def generate_ip(a,b,max_num=100):
+#     start = (a<<24) + (b<<16)
+#     ret = []
+#     for i in range(1, max_num+1):
+#         ret.append(socket.inet_ntoa(struct.pack("I", socket.htonl(start+i))))
+#     return ret
+#
+# li = generate_ip(192,168,100)
+# print(li)
+#
+# # print(socket.inet_aton("192.168.1.2"))
+# # print(socket.ntohl(struct.unpack("i",socket.inet_aton("192.168.0.1"))[0]))
+# # print(socket.inet_ntoa(struct.pack("i", socket.htonl(3232235521))))
+# # #
+# # a = 192<<24
+# # b = 168<<16
+# # ip = (192<<24)+(168<<16)
+# # print(a,b,ip)
+
+
+
+
+
 

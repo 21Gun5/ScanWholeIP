@@ -6,3 +6,7 @@
 - https://www.jianshu.com/p/4137d0d08d3a
 - https://blog.csdn.net/u013429759/article/details/81745209
 
+## 1
+- 测试URL前，先探测主机是否存活
+
+

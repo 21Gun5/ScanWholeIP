@@ -61,8 +61,4 @@ def main(url_list):
     wait(task_list, return_when=ALL_COMPLETED)
 
 if __name__ == '__main__':
-    url_list =['http://128.1.0.1:80', 'http://128.1.0.2:80', 'http://128.1.0.3:80', 'http://128.1.0.4:80', 'http://128.1.0.5:80', 'http://128.1.0.6:80', 'http://128.1.0.7:80', 'http://128.1.0.8:80', 'http://128.1.0.9:80', 'http://128.1.0.10:80']
-    for url in url_list:
-        executor = ThreadPoolExecutor(max_workers=thread_number)
-        executor.submit(send_request, url, url_list.index(url), 3)
-        # TODO: 控制超时时间，太大无记录，太小超时错误
+    pass
